@@ -188,30 +188,17 @@ class LabelingChunksProcessor:
             # Ordenar los documentos por la distancia al centroide
             sorted_docs = sorted(zip(cluster_ids, distances), key=lambda x: x[1])
 
-            # Seleccionar los 100 documentos más cercanos al centroide
-            closest_docs = [(doc_id, path) for (doc_id, _), path in zip(sorted_docs[:100], cluster_paths)]
+            sample_percentage = 0.3
+            sample_size = int(len(sorted_docs) * sample_percentage)
 
-            # Seleccionar los 100 documentos más lejanos al centroide
-            farthest_docs = [(doc_id, path) for (doc_id, _), path in zip(sorted_docs[-100:], cluster_paths)]
+            # Tomar una muestra aleatoria del 30% de los documentos ordenados
+            sampled_docs = random.sample(sorted_docs, sample_size)
 
-            # Obtener el contenido de los documentos más cercanos y más lejanos al centroide
-            # Obtener el contenido de los documentos más cercanos y más lejanos al centroide
-            closest_contents = [doc_id for doc_id, _ in closest_docs] + [doc_id for doc_id, _ in farthest_docs]
-
-            # Interleave closest and farthest documents
-            mixed_contents = []
-            min_length = min(len(closest_docs), len(farthest_docs))
-
-            for i in range(min_length):
-                mixed_contents.append(closest_docs[i])
-                mixed_contents.append(farthest_docs[i])
-
-            # If there are leftover documents in either list, add them
-            mixed_contents.extend(closest_docs[min_length:])
-            mixed_contents.extend(farthest_docs[min_length:])
+            # Emparejar los documentos muestreados con sus rutas
+            sampled_docs_with_paths = [(doc_id, path) for (doc_id, _), path in zip(sampled_docs, cluster_paths)]
 
             # Extract document paths or contents for labeling
-            mixed_contents_texts = [path for _, path in mixed_contents]  # Extracting paths or actual contents
+            mixed_contents_texts = [path for _, path in sampled_docs_with_paths]  
 
             # Generate a label for the cluster using GPT
             etiqueta = self.generate_cluster_label(mixed_contents_texts)
